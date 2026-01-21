@@ -1,5 +1,5 @@
 # Project 1
-##### Kat R., Kyle S., Timothy G., Camryn W. | CS 416 - Computer Networks and Distributed Systems
+###### Timothy G., Brody R., Kat R., Kyle S., Camryn W. | CS 416 - Computer Networks and Distributed Systems
 
 ## Tasks
 | Task                          | Designee(s)    |
