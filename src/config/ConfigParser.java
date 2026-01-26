@@ -33,7 +33,7 @@ public class ConfigParser {
 	/// Calling this method also updates the parsed configuration,
 	/// so you can call this multiple times to pull potential changes to the config file.
 	///
-	/// @param id ID/"MAC" for a host or switch device in the virtual network, (ex. "S1" or "A")
+	/// @param id ID/"MAC" for a host or lan_switch device in the virtual network, (ex. "S1" or "A")
 	///
 	/// @return a `DeviceConfig` object with the device's port, IP address, and neighbors,
 	/// 				_or **null** if no configuration exists for the ID used.<br>
@@ -108,9 +108,9 @@ public class ConfigParser {
 	///
 	/// For usable information, use a `DeviceConfig` record instead.
 	///
-	/// @param id        The ID/"MAC" of a host or switch device
-	/// @param port      The port on which the host or switch operates
-	/// @param ipAddress The IP address on which the host or switch operates
+	/// @param id        The ID/"MAC" of a host or lan_switch device
+	/// @param port      The port on which the host or lan_switch operates
+	/// @param ipAddress The IP address on which the host or lan_switch operates
 	/// @param neighbors The "linked" host and switches of this device in the topology
 	///
 	/// @see #loadConfigFile()
