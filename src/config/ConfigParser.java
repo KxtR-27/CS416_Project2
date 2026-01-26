@@ -52,13 +52,12 @@ class ConfigParser {
 	/// @see #loadConfigFile()
 	/// @see RawDeviceConfig
 	private static void updateConfigMap() {
+		// can be null if error occurs
 		RawDeviceConfig[] rawConfigs = loadConfigFile();
 
-		// abort update if something went wrong
-		if (rawConfigs == null) {
-			System.err.printf("Config file loaded, but valid configuration is not present.%n");
+		// do not update if error occurred
+		if (rawConfigs == null)
 			return;
-		}
 
 		for (RawDeviceConfig rawConfig : rawConfigs)
 			CONFIGS_MAP.put(
