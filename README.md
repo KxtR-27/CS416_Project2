@@ -38,6 +38,10 @@ This section addresses and satisfies that material.
     - **Attendees:** Tim, Kat, Kyle, Camryn
     - **Absentees:** Brody
 
+- **<ins>Friday, 1/21/2026</ins> <kbd>in-class</kbd>**
+    - **Attendees:** Tim, Kat, Kyle, Camryn
+    - **Absentees:** Brody
+
 ### Contributions
 
 The commit history details who submitted which contributions.
@@ -52,3 +56,7 @@ _Ahead of submission, a table will be added that summarizes each group member's 
 ---
 
 ###### <sup>_README authored by Kat._</sup>
+
+### Notes
+When running the switches and hosts, pass in the corresponding MAC addresses as a command-line argument.
+The rest of the attributes will come from the config file
