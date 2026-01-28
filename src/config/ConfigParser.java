@@ -92,10 +92,10 @@ public class ConfigParser {
 	/// @see #loadConfigFile()
 	private static void printErrorWithMessage(Exception e) {
 		String extraMessage = switch (e) {
-			case JsonIOException _ -> "Unable to read config file.";
-			case JsonSyntaxException _ -> "Could not correctly parse config file.";
-			case FileNotFoundException _ -> "Config file not found.";
-			case IOException _ -> "Unexpected file-related issue occurred.";
+			case JsonIOException _jioe -> "Unable to read config file.";
+			case JsonSyntaxException _jse -> "Could not correctly parse config file.";
+			case FileNotFoundException _fnfe -> "Config file not found.";
+			case IOException _ioe -> "Unexpected file-related issue occurred.";
 
 			default -> "Unhandled exception occurred.";
 		};
