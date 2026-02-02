@@ -52,7 +52,7 @@ public class Host {
         receiver.start();
     }
 
-    // handleFrame - Cam
+
     // frame looks like SRC:DST:MSG
     // break it up
     // make sure it has 3 parts
@@ -77,6 +77,23 @@ public class Host {
         } else {
             // flooded frame
             System.out.println("Frame for " + dst + " received at " + hostId + " (MAC mismatch)");
+        }
+    }
+    // make frame
+    // send to switch
+    // try/catch
+
+    private void sendFrame(String dst, String msg) {
+
+        String frame = hostId + ":" + dst + ":" + msg;
+
+        try {
+            byte[] data = frame.getBytes();
+            InetAddress addr = InetAddress.getByName(switchIp);
+            DatagramPacket packet = new DatagramPacket(data, data.length, addr, switchPort);
+            socket.send(packet);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
         }
     }
 
