@@ -49,6 +49,9 @@ This section addresses and satisfies that material.
     - **Attendees:** Brody, Kat, Kyle, Camryn
     - **Absentees:** Tim
 
+- **<ins>Monday, 2/2/2026</ins> <kbd>in-class</kbd>**
+    - **Attendees:** Tim, Brody, Kat, Kyle, Camryn
+
 ### Contributions
 
 The commit history details who submitted which contributions.
