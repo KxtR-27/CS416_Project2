@@ -35,3 +35,4 @@ bin/
 # it is important that you do not commit your config, because it could accidentally change someone else's.
 # in light of this, an example config is offered instead, and changes to your *actual* config.json stay unique to you.
 src/config/config.json
+src/lan_switch/*.class
