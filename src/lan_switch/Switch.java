@@ -13,6 +13,7 @@ public class Switch {
 	private int listeningPort;
 	private final Map<String, Integer> switchTable = new HashMap<>();
     private final Map<Integer, DeviceConfig> virtualPorts = new HashMap<>();
+    private DatagramSocket listeningSocket;
 
     private void create_and_update_switch_table(String sourceIP, int port){
         if(!switchTable.containsKey(sourceIP) || switchTable.get(sourceIP) != port){
@@ -55,35 +56,33 @@ public class Switch {
             System.out.println("No Configuration found with " + id);
         }
     }
-    public void processPacket(String sourceIP, String destinationIP, String data, int incomingPort) throws IOException {
+    public void processPacket(String sourceIP, String destinationIP, String fullFrame, int incomingPort) throws IOException {
         create_and_update_switch_table(sourceIP, incomingPort);
-        try (DatagramSocket hostSocket = new DatagramSocket()){
-            if(!switchTable.containsKey(destinationIP)){
-                System.out.println("FLOODING: Destination " + destinationIP + " unknown.");
-                for(DeviceConfig neighbor : virtualPorts.values()){
-                    if (neighbor.port() != incomingPort){
-                        sendUDP(hostSocket, neighbor.ipAddress(), neighbor.port(), data);
-                    }
+        if (!switchTable.containsKey(destinationIP)) {
+            System.out.println("FLOODING: Destination " + destinationIP + " unknown.");
+            for (DeviceConfig neighbor : virtualPorts.values()) {
+                if (neighbor.port() != incomingPort) {
+                    sendUDP(this.listeningSocket, neighbor.ipAddress(), neighbor.port(), fullFrame);
                 }
             }
+        }
             else {
                 int targetPort = switchTable.get(destinationIP);
                 DeviceConfig targetDevice = virtualPorts.get(targetPort);
                 if (targetDevice != null) {
-                    System.out.println("FORWARDING: Sending " + data + " to Port " + targetPort);
-                    sendUDP(hostSocket, targetDevice.ipAddress(), targetPort, data);
+                    System.out.println("FORWARDING: Sending " + fullFrame + " to Port " + targetPort);
+                    sendUDP(this.listeningSocket, targetDevice.ipAddress(), targetPort, fullFrame);
                 }
                 else {
                     System.err.println("Port " + targetPort + " has no associated DeviceConfig.");
                 }
             }
-        } catch (SocketException | UnknownHostException e) {
-            throw new RuntimeException(e);
         }
-    }
+
 
     public void startListening() {
-        try (DatagramSocket socket = new DatagramSocket(this.listeningPort)) {
+        try {
+            this.listeningSocket = new DatagramSocket(this.listeningPort);
             System.out.println("Switch " + id + " online on port " + listeningPort);
             byte[] buffer = new byte[1024];
 
@@ -91,7 +90,12 @@ public class Switch {
             //noinspection InfiniteLoopStatement
             while (true) {
                 DatagramPacket p = new DatagramPacket(buffer, buffer.length);
-                socket.receive(p);
+                this.listeningSocket.receive(p);
+                int portCheck = p.getPort();
+
+                if (portCheck == this.listeningPort){
+                    continue;
+                }
 
                 // Expecting -> "SRC:DEST:MSG"
                 String frame = new String(p.getData(), 0, p.getLength()).trim();
@@ -100,9 +104,8 @@ public class Switch {
                 if (parts.length == 3) {
                     String src = parts[0];
                     String dest = parts[1];
-                    String data = parts[2];
                     int incomingPort = p.getPort();
-                    processPacket(src, dest, data, incomingPort);
+                    processPacket(src, dest, frame, incomingPort);
                 }
             }
         } catch (IOException e) {
@@ -110,8 +113,8 @@ public class Switch {
         }
     }
 
-    private void sendUDP(DatagramSocket socket, String ip, int port, String data) throws IOException {
-        byte[] buffer = data.getBytes();
+    private void sendUDP(DatagramSocket socket, String ip, int port, String fullFrame) throws IOException {
+        byte[] buffer = fullFrame.getBytes();
         DatagramPacket packet = new DatagramPacket(
                 buffer,
                 buffer.length,
