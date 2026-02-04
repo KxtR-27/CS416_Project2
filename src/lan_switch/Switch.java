@@ -63,7 +63,7 @@ public class Switch {
                 System.out.println("FLOODING: Destination " + destinationIP + " unknown.");
                 for(DeviceConfig neighbor : virtualPorts.values()){
                     if (neighbor.port() != incomingPort){
-                        sendUDP(hostSocket, destinationIP, neighbor.port(), data);
+                        sendUDP(hostSocket, neighbor.ipAddress(), neighbor.port(), data);
                     }
                 }
             }
