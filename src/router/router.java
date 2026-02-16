@@ -1,13 +1,32 @@
 package router;
+import config.ConfigParser;
+import config.DeviceConfig;
+
+import java.net.DatagramSocket;
+import java.net.SocketException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class router {
     private final String id;
+    private final int  gatewayPort;
+    private DatagramSocket socket;
     private final Map<String, String> routingTable = new LinkedHashMap<>();
 
     public router(String id){
         this.id = id;
+        try {
+            DeviceConfig myConfig = ConfigParser.getConfigForDevice(id);
+            this.gatewayPort = myConfig.port();
+            this.socket = new DatagramSocket(gatewayPort);
+            System.out.println("Config loaded for " + id);
+            String[] neighbors = myConfig.neighbors();
+            for (String neighbor : neighbors){
+                DeviceConfig neighborConfig = ConfigParser.getConfigForDevice(neighbor);
+            }
+        } catch (SocketException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void create_routing_table(String subnetPrefix, String nextHop){
@@ -29,8 +48,8 @@ public class router {
         routingTable.put(subnet, nextHop);
     }
 
-    private void processFrame(String frame){
-
+    private void processFrame(String frame) throws SocketException {
+        this.socket = new DatagramSocket();
     }
 
     static void main(String[] args){
