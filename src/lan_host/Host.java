@@ -8,8 +8,11 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.util.Scanner;
 
-public class Host {
 
+public class Host {
+    private String virtualIp;
+    private String gatewayIp;
+    private String gatewayMac;
     private final String hostId;
     private String hostIp;
     private int hostPort;
@@ -35,6 +38,10 @@ public class Host {
 
         hostIp = deviceConfig.ipAddress();
         hostPort = deviceConfig.port();
+
+        virtualIp = deviceConfig.virtualIp();
+        gatewayIp = deviceConfig.gatewayIp();
+        gatewayMac = gatewayIp.split("\\.")[1];
 
         String[] neighbors = deviceConfig.neighbors();
         if (neighbors.length == 0) {
@@ -80,23 +87,30 @@ public class Host {
 
         String[] parts = frame.split(":");
 
-        if (parts.length < 3) {
+        if (parts.length < 5) {   // 5 fields
             System.out.println("Bad frame received: " + frame);
             return;
+
         }
 
-        String src = parts[0];
-        String dst = parts[1];
-        String msg = parts[2];
+        String srcMac = parts[0];
+        String dstMac = parts[1];
+        String srcIp = parts[2];
+        String dstIp = parts[3];
+        String msg = parts[4];
 
 
-        if (dst.equals(hostId)) {
-            System.out.println("Message from " + src + ": " + msg);
+        if (dstMac.equals(hostId)) {
+            System.out.println("Message from " + srcMac + ": " + msg);
         } else {
-            // flooded frame
-            System.out.println("Frame for " + dst + " received at " + hostId + " (MAC mismatch)");
+            System.out.println("Frame for " + dstMac + " received at " + hostId + " (MAC mismatch)");
         }
+
+
     }
+
+
+
 
     private void startSender() {
         Scanner scanner = new Scanner(System.in);
@@ -109,8 +123,10 @@ public class Host {
             System.out.print("Enter message: ");
             String msg = scanner.nextLine().trim();
 
-            String frame = hostId + ":" + dst + ":" + msg;
+            String frame = hostId + ":" + gatewayMac + ":" + virtualIp + ":" + dst + ":" + msg;
+
             sendFrame(frame);
+
         }
     }
 
