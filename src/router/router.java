@@ -11,7 +11,7 @@ public class router {
     private final String id;
     private final int  gatewayPort;
     private DatagramSocket socket;
-    private final Map<String, String> routingTable = new LinkedHashMap<>();
+    private final Map<String, Integer> routingTable = new LinkedHashMap<>();
 
     public router(String id){
         this.id = id;
@@ -19,19 +19,21 @@ public class router {
             DeviceConfig myConfig = ConfigParser.getConfigForDevice(id);
             this.gatewayPort = myConfig.port();
             this.socket = new DatagramSocket(gatewayPort);
+
             System.out.println("Config loaded for " + id);
             String[] neighbors = myConfig.neighbors();
             for (String neighbor : neighbors){
                 DeviceConfig neighborConfig = ConfigParser.getConfigForDevice(neighbor);
+                routingTable.put(neighborConfig.ipAddress(), neighborConfig.port());
             }
         } catch (SocketException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public void create_routing_table(String subnetPrefix, String nextHop){
-        if(!routingTable.containsKey(subnetPrefix) || !routingTable.get(subnetPrefix).equals(nextHop)){
-            routingTable.put(subnetPrefix, nextHop);
+    public void create_routing_table(String subnetPrefix, Integer port){
+        if(!routingTable.containsKey(subnetPrefix) || !routingTable.containsValue(port)){
+            routingTable.put(subnetPrefix, port);
         }
     }
 
@@ -39,13 +41,13 @@ public class router {
         System.out.println("\n========= ROUTING TABLE (ID: " + this.id + ") =========");
         System.out.printf("%-15s | %-10s%n", "Subnet Prefix", "Next Hop");
         System.out.println("-------------------------------------------");
-        for (Map.Entry<String, String> entry : routingTable.entrySet()){
+        for (Map.Entry<String, Integer> entry : routingTable.entrySet()){
             System.out.printf("%-15s | %-10s%n", entry.getKey(), entry.getValue());
         }
     }
 
-    public void addEntry(String subnet, String nextHop) {
-        routingTable.put(subnet, nextHop);
+    public void addEntry(String subnet, Integer port) {
+        routingTable.put(subnet, port);
     }
 
     private void processFrame(String frame) throws SocketException {
@@ -55,9 +57,9 @@ public class router {
     static void main(String[] args){
         router r1 = new router("r1");
 
-        r1.addEntry("net1", "left port");
-        r1.addEntry("net2", "right port");
-        r1.addEntry("net3", "net2.R2");
+        r1.addEntry("net1", 3000);
+        r1.addEntry("net2", 3001);
+        r1.addEntry("net3", 3002);
 
         r1.print_routing_table();
     }
