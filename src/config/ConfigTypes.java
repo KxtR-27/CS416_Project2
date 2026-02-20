@@ -2,6 +2,11 @@ package config;
 
 import java.util.Map;
 
+/// Remember: there are two ways to call these classes in your code.
+/// 1. type the whole class - `ConfigTypes.HostConfig`
+/// 2. or......<br>
+///    `import static config.ConfigTypes.*` at the top of your file,<br>
+///    then just type `HostConfig`<br>
 public class ConfigTypes {
 	public record HostConfig(
 			String id,
