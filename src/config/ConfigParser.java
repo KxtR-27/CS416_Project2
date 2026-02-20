@@ -107,7 +107,7 @@ public class ConfigParser {
 
 
 	/// Parses the config.json file into
-	/// a map of Host objects, a map of Switch objects, and a map of Router objects..
+	/// a map of Host objects, a map of Switch objects, and a map of Router objects.
 	private static void parseConfig() {
 		ConfigSnapshot configuration = readConfigFile();
 		populateDeviceMaps(configuration);
@@ -152,6 +152,5 @@ public class ConfigParser {
 			HostConfig[] hosts,
 			SwitchConfig[] switches,
 			RouterConfig[] routers
-	) {
-	}
+	) {}
 }
