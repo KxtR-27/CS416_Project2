@@ -1,6 +1,6 @@
 package router;
 import config.ConfigParser;
-import config.DeviceConfig;
+import config.ConfigTypes;
 
 import java.net.DatagramSocket;
 import java.net.SocketException;
@@ -16,15 +16,15 @@ public class router {
     public router(String id){
         this.id = id;
         try {
-            DeviceConfig myConfig = ConfigParser.getConfigForDevice(id);
-            this.gatewayPort = myConfig.port();
+            ConfigTypes.RouterConfig myConfig = ConfigParser.getRouterConfig(id);
+            this.gatewayPort = myConfig.realPort();
             this.socket = new DatagramSocket(gatewayPort);
 
             System.out.println("Config loaded for " + id);
-            String[] neighbors = myConfig.neighbors();
+            String[] neighbors = myConfig.virtualIPs();
             for (String neighbor : neighbors){
-                DeviceConfig neighborConfig = ConfigParser.getConfigForDevice(neighbor);
-                routingTable.put(neighborConfig.ipAddress(), neighborConfig.port());
+                ConfigTypes.RouterConfig neighborConfig = ConfigParser.getRouterConfig(neighbor);
+                routingTable.put(neighborConfig.realIP(), neighborConfig.realPort());
             }
         } catch (SocketException e) {
             throw new RuntimeException(e);
@@ -46,21 +46,24 @@ public class router {
         }
     }
 
-    public void addEntry(String subnet, Integer port) {
-        routingTable.put(subnet, port);
-    }
-
     private void processFrame(String frame) throws SocketException {
         this.socket = new DatagramSocket();
+        String[] parts= frame.split(":", 5);
+        if (parts.length != 5) {
+            System.out.println("[ROUTER " + this.id + "] bad frame (needs 5 fields): " + frame);
+            return;
+        }
+        String srcMac = parts[0].trim();
+        String dstMac = parts[1].trim();
+        String srcIp = parts[2].trim();
+        String dstIp = parts[3].trim();
+        String msg = parts[4];
+
+        System.out.println("ROUTER " + parts.length);
     }
 
     static void main(String[] args){
-        router r1 = new router("r1");
-
-        r1.addEntry("net1", 3000);
-        r1.addEntry("net2", 3001);
-        r1.addEntry("net3", 3002);
-
-        r1.print_routing_table();
+        router r1 = new router("R1");
+        System.out.println(r1.id + r1.gatewayPort);
     }
 }
