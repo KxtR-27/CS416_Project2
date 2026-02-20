@@ -3,7 +3,9 @@ import config.ConfigParser;
 import config.ConfigTypes;
 
 import java.net.DatagramSocket;
+import java.net.InetSocketAddress;
 import java.net.SocketException;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -11,7 +13,8 @@ public class router {
     private final String id;
     private final int  gatewayPort;
     private DatagramSocket socket;
-    private final Map<String, Integer> routingTable = new LinkedHashMap<>();
+    private final Map<String, InetSocketAddress> routingTable = new LinkedHashMap<>();
+    private final Map<String, String> virtualRoutingTable = new HashMap<>();
 
     public router(String id){
         this.id = id;
@@ -19,21 +22,41 @@ public class router {
             ConfigTypes.RouterConfig myConfig = ConfigParser.getRouterConfig(id);
             this.gatewayPort = myConfig.realPort();
             this.socket = new DatagramSocket(gatewayPort);
+            String ip = null;
+            int port = -1;
 
             System.out.println("Config loaded for " + id);
-            String[] neighbors = myConfig.virtualIPs();
-            for (String neighbor : neighbors){
-                ConfigTypes.RouterConfig neighborConfig = ConfigParser.getRouterConfig(neighbor);
-                routingTable.put(neighborConfig.realIP(), neighborConfig.realPort());
+            Map<String, String> forwarder = myConfig.forwardingTable();
+            for (Map.Entry<String, String> entry : forwarder.entrySet()){
+                String subnet = entry.getKey();
+                String nextHopId = entry.getValue();
+                virtualRoutingTable.put(subnet, nextHopId);
+                ConfigTypes.RouterConfig nextHopConfig = ConfigParser.getRouterConfig(nextHopId);
+                if(nextHopConfig != null) {
+                    routingTable.put(subnet, new InetSocketAddress(nextHopConfig.realIP(), nextHopConfig.realPort()));
+                }
+                else {
+                    ConfigTypes.SwitchConfig switchConfig = ConfigParser.getSwitchConfig(nextHopId);
+                    if(switchConfig !=  null) {
+                        ip = switchConfig.ipAddress();
+                        port = switchConfig.port();
+                    }
+                    else{
+                        ConfigTypes.HostConfig hostConfig = ConfigParser.getHostConfig(nextHopId);
+                        if(hostConfig != null){
+                            ip = hostConfig.realIP();
+                            port = hostConfig.realPort();
+                        }
+                    }
+                    if(ip != null && port != -1){
+                        routingTable.put(subnet, new InetSocketAddress(ip, port));
+                    }else {
+                        System.err.println("NPE Prevention: ID '" + nextHopId + "' not found in any config map!");
+                    }
+                }
             }
         } catch (SocketException e) {
             throw new RuntimeException(e);
-        }
-    }
-
-    public void create_routing_table(String subnetPrefix, Integer port){
-        if(!routingTable.containsKey(subnetPrefix) || !routingTable.containsValue(port)){
-            routingTable.put(subnetPrefix, port);
         }
     }
 
@@ -41,7 +64,7 @@ public class router {
         System.out.println("\n========= ROUTING TABLE (ID: " + this.id + ") =========");
         System.out.printf("%-15s | %-10s%n", "Subnet Prefix", "Next Hop");
         System.out.println("-------------------------------------------");
-        for (Map.Entry<String, Integer> entry : routingTable.entrySet()){
+        for (Map.Entry<String, String> entry :virtualRoutingTable.entrySet()){
             System.out.printf("%-15s | %-10s%n", entry.getKey(), entry.getValue());
         }
     }
@@ -63,7 +86,10 @@ public class router {
     }
 
     static void main(String[] args){
-        router r1 = new router("R1");
-        System.out.println(r1.id + r1.gatewayPort);
+        if(args.length != 1){
+            System.out.println("Please provide Router ID in Arguments");
+        }
+        router r1 = new router(args[0]);
+        r1.print_routing_table();
     }
 }
