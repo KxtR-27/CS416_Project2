@@ -70,7 +70,7 @@ public class router {
     }
 
     private void processFrame(String frame) throws SocketException {
-        this.socket = new DatagramSocket();
+        // format: srcMac:dstMac:srcIp:dstIp:msg
         String[] parts= frame.split(":", 5);
         if (parts.length != 5) {
             System.out.println("[ROUTER " + this.id + "] bad frame (needs 5 fields): " + frame);
@@ -82,7 +82,19 @@ public class router {
         String dstIp = parts[3].trim();
         String msg = parts[4];
 
-        System.out.println("ROUTER " + parts.length);
+        System.out.println("[ROUTER " + this.id + "] " +
+                "srcMac=" + srcMac + " dstMac=" + dstMac +
+                " srcIp=" + srcIp + " dstIp=" + dstIp + " msg=" + msg);
+
+        // get "net3" from "net3.D", then turn it into "subnet3"
+        String key = "subnet" + dstIp.split("\\.", 2)[0].substring(3);
+
+        InetSocketAddress next = routingTable.get(key);
+        String nextHopId = virtualRoutingTable.get(key);
+
+        if (next == null || nextHopId == null) {
+            System.out.println("[ROUTER " + this.id + "] no route for " + dstIp + " (key=" + key + ")");
+        }
     }
 
     static void main(String[] args){
