@@ -2,9 +2,12 @@ package router;
 import config.ConfigParser;
 import config.ConfigTypes;
 
+import java.io.IOException;
+import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -69,7 +72,7 @@ public class router {
         }
     }
 
-    private void processFrame(String frame) throws SocketException {
+    private void processFrame(String frame) throws IOException {
         // format: srcMac:dstMac:srcIp:dstIp:msg
         String[] parts= frame.split(":", 5);
         if (parts.length != 5) {
@@ -94,7 +97,13 @@ public class router {
 
         if (next == null || nextHopId == null) {
             System.out.println("[ROUTER " + this.id + "] no route for " + dstIp + " (key=" + key + ")");
+            return;
         }
+
+        String out = this.id + ":" + nextHopId + ":" + srcIp + ":" + dstIp + ":" + msg;
+
+        byte[] data = out.getBytes(StandardCharsets.UTF_8);
+        socket.send(new DatagramPacket(data, data.length, next));
     }
 
     static void main(String[] args){
