@@ -97,16 +97,21 @@ public class Host {
             return;
         }
 
+
+
         String srcMac = parts[0];
         String dstMac = parts[1];
         String srcIp = parts[2];
         String dstIp = parts[3];
         String msg = parts[4];
 
+        if (srcMac.equals(this.hostId)) {
+            return;
+        }
+
         if (dstMac.equals(hostId)) {
-            System.out.println("Message from " + srcMac + ": " + msg);
-        } else {
-            System.out.println("Frame for " + dstMac + " received at " + hostId + " (MAC mismatch)");
+            String senderName = parts[2].contains(".") ? parts[2].split("\\.")[1] : parts[2];
+            System.out.println("Message from " + senderName + ": " + parts[4]);
         }
     }
 
@@ -128,11 +133,20 @@ public class Host {
             }
 
             String dstVip = dstCfg.virtualIP();
-            String dstMac = dstVip.split("\\.")[1];
+            String mySubnet = virtualIp.split("\\.")[0];
+            String dstSubnet = dstVip.split("\\.")[0];
 
+            String targetMac;
+            if (mySubnet.equals(dstSubnet)) {
+                // Local destination: use the host's ID (e.g., "D")
+                targetMac = dstVip.split("\\.")[1];
+            } else {
+                // Remote destination: use the GATEWAY'S ID (e.g., "R2")
+                // gatewayMac was already calculated in loadConfig()!
+                targetMac = this.gatewayMac;
+            }
 
-            String frame = hostId + ":" + dstMac + ":" + virtualIp + ":" + dstVip + ":" + msg;
-
+            String frame = hostId + ":" + targetMac + ":" + virtualIp + ":" + dstVip + ":" + msg;
             sendFrame(frame);
         }
     }

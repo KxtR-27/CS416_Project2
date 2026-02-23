@@ -79,11 +79,18 @@ public class router {
             System.out.println("[ROUTER " + this.id + "] bad frame (needs 5 fields): " + frame);
             return;
         }
+
+
         String srcMac = parts[0].trim();
         String dstMac = parts[1].trim();
         String srcIp = parts[2].trim();
         String dstIp = parts[3].trim();
         String msg = parts[4];
+
+        if (!dstMac.equals(this.id)) {
+            System.out.println("[ROUTER " + this.id + "] Received frame for " + dstMac + " - Not for me. Ignoring/Dropping.");
+            return;
+        }
 
         System.out.println("[ROUTER " + this.id + "] " +
                 "srcMac=" + srcMac + " dstMac=" + dstMac +
@@ -95,12 +102,16 @@ public class router {
         InetSocketAddress next = routingTable.get(key);
         String nextHopId = virtualRoutingTable.get(key);
 
-        if (next == null || nextHopId == null) {
-            System.out.println("[ROUTER " + this.id + "] no route for " + dstIp + " (key=" + key + ")");
-            return;
+        String dstMacForFrame;
+        if (nextHopId.startsWith("S")) {
+            dstMacForFrame = dstIp.split("\\.")[1];
+        } else {
+            // If sending to another router, use the router's ID
+            dstMacForFrame = nextHopId;
         }
 
-        String out = this.id + ":" + nextHopId + ":" + srcIp + ":" + dstIp + ":" + msg;
+        String out = this.id + ":" + dstMacForFrame + ":" + srcIp + ":" + dstIp + ":" + msg;
+        System.out.println("[ROUTER " + this.id + "] OUTGOING FRAME: " + out);
 
         byte[] data = out.getBytes(StandardCharsets.UTF_8);
         socket.send(new DatagramPacket(data, data.length, next));
