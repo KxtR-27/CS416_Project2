@@ -106,11 +106,31 @@ public class router {
         socket.send(new DatagramPacket(data, data.length, next));
     }
 
+    public void startListening() {
+        System.out.println("[ROUTER " + this.id + "] Listening on port " + gatewayPort + "...");
+        byte[] buffer = new byte[65535];
+
+        while (true) {
+            try {
+                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+                socket.receive(packet);
+                String receivedData = new String(packet.getData(), 0, packet.getLength(), StandardCharsets.UTF_8);
+                processFrame(receivedData);
+            } catch (IOException e) {
+                System.err.println("[ROUTER " + this.id + "] Error receiving packet: " + e.getMessage());
+                if (socket.isClosed()) break;
+            }
+        }
+    }
+
+
+
     static void main(String[] args){
         if(args.length != 1){
             System.out.println("Please provide Router ID in Arguments");
         }
         router r1 = new router(args[0]);
         r1.print_routing_table();
+        r1.startListening();
     }
 }
